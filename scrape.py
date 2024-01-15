@@ -5,6 +5,25 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service as ChromeService 
 from webdriver_manager.chrome import ChromeDriverManager 
 from selenium.webdriver.common.by import By 
+from firebase_admin import credentials
+from firebase_admin import firestore
+from firebase_admin import initialize_app, credentials
+import os
+
+# Set the current working directory to the directory of this script
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
+# Use a service account
+cred = credentials.Certificate('lark-leaderboard-firebase-adminsdk-uqcox-f780cfe004.json')
+initialize_app(cred)
+
+db = firestore.client()
+
+def send_to_firestore(data):
+    doc_ref = db.collection(u'dsnwebscraper').document()
+    data['timestamp'] = datetime.now()
+    doc_ref.set(data)
+
  
 variables = ['NAME', 'RANGE', 'ROUND-TRIP LIGHT TIME', 'NAME', 'AZIMUTH', 'ELEVATION', 'WIND SPEED', 'MODE', 'SOURCE', 'FREQUENCY BAND', 'DATA RATE', 'POWER RECEIVED']
 
@@ -68,9 +87,9 @@ for i in range(3):
                             # print(res[variables[e]])
                             print(values[e].text)
                         print(res)
+		        send_to_firestore(res)
+
+			
                         break
             except:
                 print("No element found")
-
-
-
