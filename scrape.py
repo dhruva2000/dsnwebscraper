@@ -1,5 +1,6 @@
 # Import requests
-import time 
+from datetime import datetime 
+import time
 from bs4 import BeautifulSoup
 from selenium import webdriver 
 from selenium.webdriver.chrome.service import Service as ChromeService 
@@ -10,19 +11,6 @@ from firebase_admin import firestore
 from firebase_admin import initialize_app, credentials
 import os
 
-# Set the current working directory to the directory of this script
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
-
-# Use a service account
-cred = credentials.Certificate('lark-leaderboard-firebase-adminsdk-uqcox-f780cfe004.json')
-initialize_app(cred)
-
-db = firestore.client()
-
-def send_to_firestore(data):
-    doc_ref = db.collection(u'dsnwebscraper').document()
-    data['timestamp'] = datetime.now()
-    doc_ref.set(data)
 
 # Create a dictionary to hold all the data
 variables = ['NAME', 'RANGE', 'ROUND-TRIP LIGHT TIME', 'NAME', 'AZIMUTH', 'ELEVATION', 'WIND SPEED', 'MODE', 'SOURCE', 'FREQUENCY BAND', 'DATA RATE', 'POWER RECEIVED']
@@ -42,8 +30,23 @@ time.sleep(3)
 # Build list of small dishes
 small_dishes = driver.find_elements(By.CSS_SELECTOR, "div[class*='figure small_dish'")
 
+# Set the current working directory to the directory of this script
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
+
+# Use a service account
+cred = credentials.Certificate('lark-leaderboard-firebase-adminsdk-uqcox-f780cfe004.json')
+initialize_app(cred)
+
+db = firestore.client()
+
+def send_to_firestore(data):
+    doc_ref = db.collection(u'dsnwebscraper').document()
+    data['TIMESTAMP'] = datetime.now()
+    doc_ref.set(data)
+
 for i in range(3):
     # --------------------------------- first row -------------------------------- #
+    
     if i == 0:
         for j in range(5):
 	    # Creating an ID to search: this should look like "spacecraft_0_1"
@@ -68,6 +71,7 @@ for i in range(3):
                             # print(res[variables[e]])
                             print(values[e].text)
                         print(res)
+                        send_to_firestore(res)
                         break
             except:
 		# Error: Dish is inactive
@@ -93,8 +97,6 @@ for i in range(3):
                             # print(res[variables[e]])
                             print(values[e].text)
                         print(res)
-		        send_to_firestore(res)
-
 			
                         break
             except:
